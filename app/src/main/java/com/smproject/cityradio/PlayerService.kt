@@ -1,10 +1,16 @@
 package com.smproject.cityradio
 
-import android.app.Service
+import android.app.*
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.IBinder
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+
 
 class PlayerService : Service() {
 
@@ -25,8 +31,10 @@ class PlayerService : Service() {
     override fun onCreate() {
         super.onCreate()
 
+        showNotification()
+
         mediaSession.apply {
-            isActive  = true
+            isActive = true
             setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
 //            setMetadata()
             setCallback(object : MediaSessionCompat.Callback() {
@@ -57,13 +65,63 @@ class PlayerService : Service() {
             return START_NOT_STICKY
         }
 
-        when(action) {
+        when (action) {
             ACTION_PLAY -> mediaControls.play()
             ACTION_PAUSE -> mediaControls.pause()
             ACTION_STOP -> mediaControls.stop()
         }
 
         return START_STICKY
+
+    }
+
+    private fun showNotification() {
+
+        val PRIMARY_CHANNEL = "PRIMARY_CHANNEL_ID"
+        val PRIMARY_CHANNEL_NAME = "PRIMARY"
+
+
+        val notificationManager = NotificationManagerCompat.from(this)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                PRIMARY_CHANNEL,
+                PRIMARY_CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_LOW
+            )
+            channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+            notificationManager.createNotificationChannel(channel)
+        }
+
+
+        val notifucation = NotificationCompat.Builder(this, "radio_player")
+            .setAutoCancel(false)
+            .setContentTitle("")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .addAction(
+                R.drawable.ic_music_note, "Play",
+                PendingIntent.getService(
+                    this, 1,
+                    Intent(MyApplication.application, PlayerService::class.java).apply {
+                        setAction(PlayerService.ACTION_PLAY)
+                        setData(Uri.parse("https://c34.radioboss.fm:18234/stream"))
+                    },
+                    PendingIntent.FLAG_IMMUTABLE
+                )
+            )
+            .addAction(
+                R.drawable.ic_music_note, "Pause",
+                PendingIntent.getService(
+                    this, 1,
+                    Intent(MyApplication.application, PlayerService::class.java).apply {
+                        setAction(PlayerService.ACTION_PAUSE)
+                    },
+                    PendingIntent.FLAG_IMMUTABLE
+                )
+            )
+            .build()
+
+        startForeground(12345, notifucation)
 
     }
 
