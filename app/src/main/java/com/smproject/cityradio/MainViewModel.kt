@@ -1,5 +1,7 @@
 package com.smproject.cityradio
 
+import android.content.Intent
+import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
@@ -34,10 +36,18 @@ class MainViewModel : ViewModel() {
 
     fun clickBtnPlayer() {
         when (viewState.value?.btnStatus) {
-            PlayerStatus.PLAYING -> RadioPlayer.pausePlayer()
-
             PlayerStatus.PAUSE -> {
-                RadioPlayer.play("https://c34.radioboss.fm:18234/stream")
+                MyApplication.application.startService(Intent(MyApplication.application, PlayerService::class.java).apply {
+                    setAction(PlayerService.ACTION_PLAY)
+                    setData(Uri.parse("https://c34.radioboss.fm:18234/stream"))
+                })
+            }
+
+            PlayerStatus.PLAYING -> {
+                MyApplication.application.startService(Intent(MyApplication.application, PlayerService::class.java).apply {
+                    setAction(PlayerService.ACTION_PAUSE)
+                    setData(Uri.parse("https://c34.radioboss.fm:18234/stream"))
+                })
             }
             null -> {
                 //Do nothing
@@ -53,6 +63,5 @@ class MainViewModel : ViewModel() {
     fun setSongTitle() {
 
     }
-
 
 }
