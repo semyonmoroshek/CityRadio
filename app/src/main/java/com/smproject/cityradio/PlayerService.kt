@@ -15,7 +15,15 @@ import androidx.core.app.NotificationManagerCompat
 class PlayerService : Service() {
 
     val mediaSession: MediaSessionCompat by lazy {
-        MediaSessionCompat(this, "Player")
+        MediaSessionCompat(
+            this, "Player", null,
+            PendingIntent.getBroadcast(
+                baseContext,
+                1,
+                Intent(Intent.ACTION_MEDIA_BUTTON),
+                PendingIntent.FLAG_IMMUTABLE
+            )
+        )
     }
 
     val mediaControls: MediaControllerCompat.TransportControls by lazy {
@@ -87,24 +95,26 @@ class PlayerService : Service() {
             val channel = NotificationChannel(
                 PRIMARY_CHANNEL,
                 PRIMARY_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_HIGH
             )
             channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
             notificationManager.createNotificationChannel(channel)
         }
 
-
-        val notifucation = NotificationCompat.Builder(this, "radio_player")
+        val notifucation = NotificationCompat.Builder(this, PRIMARY_CHANNEL)
+            .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
+                .setShowCancelButton(true))
             .setAutoCancel(false)
             .setContentTitle("")
+            .setSmallIcon(R.drawable.ic_music_note)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .addAction(
                 R.drawable.ic_music_note, "Play",
                 PendingIntent.getService(
                     this, 1,
                     Intent(MyApplication.application, PlayerService::class.java).apply {
-                        setAction(PlayerService.ACTION_PLAY)
-                        setData(Uri.parse("https://c34.radioboss.fm:18234/stream"))
+                        action = ACTION_PLAY
+                        data = Uri.parse("https://c34.radioboss.fm:18234/stream")
                     },
                     PendingIntent.FLAG_IMMUTABLE
                 )
