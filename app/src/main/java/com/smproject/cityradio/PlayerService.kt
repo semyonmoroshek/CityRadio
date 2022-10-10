@@ -1,7 +1,6 @@
 package com.smproject.cityradio
 
 import android.app.*
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -40,17 +39,17 @@ class PlayerService : Service() {
             setCallback(object : MediaSessionCompat.Callback() {
                 override fun onPlay() {
                     super.onPlay()
-                    RadioPlayer.play("https://c34.radioboss.fm:18234/stream")
+                    RadioExoPlayer.play("https://c34.radioboss.fm:18234/stream")
                 }
 
                 override fun onPause() {
                     super.onPause()
-                    RadioPlayer.pausePlayer()
+                    RadioExoPlayer.pausePlayer()
                 }
 
                 override fun onStop() {
                     super.onStop()
-                    RadioPlayer.pausePlayer()
+                    RadioExoPlayer.pausePlayer()
                 }
             })
         }
@@ -94,9 +93,10 @@ class PlayerService : Service() {
         }
 
 
-        val notifucation = NotificationCompat.Builder(this, "radio_player")
+        val notifucation = NotificationCompat.Builder(this, PRIMARY_CHANNEL)
             .setAutoCancel(false)
             .setContentTitle("")
+            .setSmallIcon(R.drawable.ic_music_note)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .addAction(
                 R.drawable.ic_music_note, "Play",
