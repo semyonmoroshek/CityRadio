@@ -1,7 +1,7 @@
 package com.smproject.cityradio
 
 data class MainViewState(
-    val btnStatus: PlayerStatus,
+    val btnStatus: PlayerStatus = PlayerStatus.PAUSE,
     val songName: String? = null
 )
 

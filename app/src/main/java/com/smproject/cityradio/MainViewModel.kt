@@ -14,39 +14,39 @@ class MainViewModel : ViewModel() {
 
     val viewState: LiveData<MainViewState> = _viewState
 
-    private val playerObserver = Observer<RadioPlayer.Status> {
+    private val playerObserver = Observer<RadioExoPlayer.Status> {
         when (it) {
-            RadioPlayer.Status.STOP, RadioPlayer.Status.PREPARING, RadioPlayer.Status.PAUSE, null -> {
+            RadioExoPlayer.Status.STOP, RadioExoPlayer.Status.PREPARING, RadioExoPlayer.Status.PAUSE, null -> {
                 _viewState.value = _viewState.value?.copy(btnStatus = PlayerStatus.PLAYING)
             }
-            RadioPlayer.Status.PLAYING -> {
+            RadioExoPlayer.Status.PLAYING -> {
                 _viewState.value = _viewState.value?.copy(btnStatus = PlayerStatus.PAUSE)
             }
         }
     }
 
     init {
-        RadioPlayer.status.observeForever(playerObserver)
+        RadioExoPlayer.status.observeForever(playerObserver)
     }
 
     override fun onCleared() {
-        RadioPlayer.status.removeObserver(playerObserver)
+        RadioExoPlayer.status.removeObserver(playerObserver)
 
     }
 
     fun clickBtnPlayer() {
         when (viewState.value?.btnStatus) {
-            PlayerStatus.PAUSE -> {
+            PlayerStatus.PLAYING -> {
                 MyApplication.application.startService(Intent(MyApplication.application, PlayerService::class.java).apply {
-                    setAction(PlayerService.ACTION_PLAY)
-                    setData(Uri.parse("https://c34.radioboss.fm:18234/stream"))
+                    action = PlayerService.ACTION_PLAY
+                    data = Uri.parse("https://c34.radioboss.fm:18234/stream")
                 })
             }
 
-            PlayerStatus.PLAYING -> {
+            PlayerStatus.PAUSE -> {
                 MyApplication.application.startService(Intent(MyApplication.application, PlayerService::class.java).apply {
-                    setAction(PlayerService.ACTION_PAUSE)
-                    setData(Uri.parse("https://c34.radioboss.fm:18234/stream"))
+                    action = PlayerService.ACTION_PAUSE
+                    data = Uri.parse("https://c34.radioboss.fm:18234/stream")
                 })
             }
             null -> {
