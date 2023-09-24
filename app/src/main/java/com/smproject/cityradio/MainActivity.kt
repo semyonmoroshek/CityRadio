@@ -2,6 +2,7 @@ package com.smproject.cityradio
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.viewModels
 import com.smproject.cityradio.databinding.ActivityMainBinding
 
@@ -25,11 +26,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         viewModel.viewState.observe(this) {
+            Log.d("TTTT", "ViewState observe: $it ")
             renderUI(it)
         }
     }
 
     private fun renderUI(mainViewState: MainViewState) {
+        Log.d("TTTT", "ViewState renderUI: ${mainViewState.btnStatus}")
         when (mainViewState.btnStatus) {
             PlayerStatus.PLAYING ->
                 binding
