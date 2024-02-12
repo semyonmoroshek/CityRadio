@@ -12,7 +12,7 @@ import java.io.IOException
 
 object RadioExoPlayer {
 
-    private val _status = MutableLiveData(Status.STOP)
+    private val _status = MutableLiveData(Status.PAUSE)
     val status: LiveData<Status> = _status
 
     private val mediaPlayer: ExoPlayer by lazy {
@@ -26,15 +26,24 @@ object RadioExoPlayer {
     fun play(url: String) {
 
         try {
-            if (mediaItem == null) {
-                mediaItem = MediaItem.fromUri(url).also {
-                    mediaPlayer.setMediaItem(it)
-                }
-            }
+//            if (mediaItem == null) {
+//                mediaItem = MediaItem.fromUri(url).also {
+//                    mediaPlayer.setMediaItem(it)
+//                }
+//            }
+
+            mediaPlayer.stop()
+            mediaPlayer.clearMediaItems()
+
+            // Создайте новый MediaItem и установите его
+            val newMediaItem = MediaItem.fromUri(url)
+            mediaItem = newMediaItem
+            mediaPlayer.setMediaItem(newMediaItem)
 
             mediaPlayer.prepare()
+//            mediaPlayer.play()
 
-            mediaPlayer.addListener(object : Player.Listener {
+                mediaPlayer.addListener(object : Player.Listener {
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     if (Player.STATE_READY == playbackState) {
                         mediaPlayer.play()

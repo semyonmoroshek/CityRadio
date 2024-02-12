@@ -17,10 +17,10 @@ class MainViewModel : ViewModel() {
     private val playerObserver = Observer<RadioExoPlayer.Status> {
         when (it) {
             RadioExoPlayer.Status.STOP, RadioExoPlayer.Status.PREPARING, RadioExoPlayer.Status.PAUSE, null -> {
-                _viewState.value = _viewState.value?.copy(btnStatus = PlayerStatus.PLAYING)
+                _viewState.value = _viewState.value?.copy(btnStatus = PlayerStatus.PAUSE)
             }
             RadioExoPlayer.Status.PLAYING -> {
-                _viewState.value = _viewState.value?.copy(btnStatus = PlayerStatus.PAUSE)
+                _viewState.value = _viewState.value?.copy(btnStatus = PlayerStatus.PLAYING)
             }
         }
     }
@@ -38,14 +38,14 @@ class MainViewModel : ViewModel() {
         when (viewState.value?.btnStatus) {
             PlayerStatus.PLAYING -> {
                 MyApplication.application.startService(Intent(MyApplication.application, PlayerService::class.java).apply {
-                    action = PlayerService.ACTION_PLAY
+                    action = PlayerService.ACTION_PAUSE
                     data = Uri.parse("https://c34.radioboss.fm:18234/stream")
                 })
             }
 
             PlayerStatus.PAUSE -> {
                 MyApplication.application.startService(Intent(MyApplication.application, PlayerService::class.java).apply {
-                    action = PlayerService.ACTION_PAUSE
+                    action = PlayerService.ACTION_PLAY
                     data = Uri.parse("https://c34.radioboss.fm:18234/stream")
                 })
             }
