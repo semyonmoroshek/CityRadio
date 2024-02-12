@@ -4,14 +4,13 @@ import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.util.Log
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import java.io.IOException
 
 object RadioPlayer {
 
-    private val _status = MutableLiveData(Status.STOP)
-    val status: LiveData<Status> = _status
+    private val _status = MutableLiveData(Status.PAUSE)
+    val status: MutableLiveData<Status> = _status
 
     private val mediaPlayer: MediaPlayer by lazy {
         MediaPlayer().also {
@@ -27,7 +26,7 @@ object RadioPlayer {
 
 
     fun play(url: String) {
-
+        Log.d("TTTT", "fun play")
         mediaPlayer.stop()
 
         try {
@@ -46,6 +45,7 @@ object RadioPlayer {
     }
 
     private fun playPlayer() {
+        Log.d("TTTT", "fun playPlayer")
         try {
             mediaPlayer.start()
             _status.value = Status.PLAYING
@@ -55,6 +55,7 @@ object RadioPlayer {
     }
 
     fun pausePlayer() {
+        Log.d("TTTT", "fun pausePlayer")
         try {
             mediaPlayer.pause()
             _status.value = Status.PAUSE

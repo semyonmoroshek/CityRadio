@@ -1,13 +1,17 @@
 package com.smproject.cityradio
 
-import android.app.*
-import android.content.Context
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 
@@ -36,20 +40,22 @@ class PlayerService : Service() {
         mediaSession.apply {
             isActive = true
             setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
-//            setMetadata()
             setCallback(object : MediaSessionCompat.Callback() {
                 override fun onPlay() {
                     super.onPlay()
+                    Log.d("TTTT", "override fun onPlay")
                     RadioPlayer.play("https://c34.radioboss.fm:18234/stream")
                 }
 
                 override fun onPause() {
                     super.onPause()
+                    Log.d("TTTT", "override fun onPausy")
                     RadioPlayer.pausePlayer()
                 }
 
                 override fun onStop() {
                     super.onStop()
+                    Log.d("TTTT", "override fun onStop")
                     RadioPlayer.pausePlayer()
                 }
             })
@@ -80,21 +86,19 @@ class PlayerService : Service() {
         val PRIMARY_CHANNEL = "PRIMARY_CHANNEL_ID"
         val PRIMARY_CHANNEL_NAME = "PRIMARY"
 
-
         val notificationManager = NotificationManagerCompat.from(this)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 PRIMARY_CHANNEL,
                 PRIMARY_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_DEFAULT
             )
             channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
             notificationManager.createNotificationChannel(channel)
         }
 
-
-        val notifucation = NotificationCompat.Builder(this, "radio_player")
+        val notifucation = NotificationCompat.Builder(this, PRIMARY_CHANNEL)
             .setAutoCancel(false)
             .setContentTitle("")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -103,8 +107,8 @@ class PlayerService : Service() {
                 PendingIntent.getService(
                     this, 1,
                     Intent(MyApplication.application, PlayerService::class.java).apply {
-                        setAction(PlayerService.ACTION_PLAY)
-                        setData(Uri.parse("https://c34.radioboss.fm:18234/stream"))
+                        action = ACTION_PLAY
+                        data = Uri.parse("https://c34.radioboss.fm:18234/stream")
                     },
                     PendingIntent.FLAG_IMMUTABLE
                 )
@@ -114,7 +118,7 @@ class PlayerService : Service() {
                 PendingIntent.getService(
                     this, 1,
                     Intent(MyApplication.application, PlayerService::class.java).apply {
-                        setAction(PlayerService.ACTION_PAUSE)
+                        action = ACTION_PAUSE
                     },
                     PendingIntent.FLAG_IMMUTABLE
                 )
