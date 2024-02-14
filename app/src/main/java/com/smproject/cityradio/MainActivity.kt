@@ -5,7 +5,9 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.viewModels
 import com.smproject.cityradio.databinding.ActivityMainBinding
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     val binding: ActivityMainBinding by lazy {
@@ -29,6 +31,13 @@ class MainActivity : AppCompatActivity() {
             Log.d("TTTT", "viewModel.viewState.observe: $it")
             renderUI(it)
         }
+
+        viewModel.startUpdateSongTitle()
+
+        viewModel.songTitle.observe(this) { songTitle ->
+            binding.title.text = songTitle
+
+        }
     }
 
     private fun renderUI(mainViewState: MainViewState) {
@@ -37,6 +46,7 @@ class MainActivity : AppCompatActivity() {
                 binding
                     .imgPlayPauseBtn
                     .setImageResource(R.drawable.ic_pause_button)
+
             PlayerStatus.PAUSE ->
                 binding
                     .imgPlayPauseBtn
