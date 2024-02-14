@@ -1,12 +1,14 @@
 package com.smproject.cityradio
 
 import android.app.*
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 
@@ -30,7 +32,7 @@ class PlayerService : Service() {
     override fun onCreate() {
         super.onCreate()
 
-        showNotification()
+        startForeground(12345, getNotification())
 
         mediaSession.apply {
             isActive = true
@@ -65,20 +67,33 @@ class PlayerService : Service() {
         }
 
         when (action) {
-            ACTION_PLAY -> mediaControls.play()
-            ACTION_PAUSE -> mediaControls.pause()
-            ACTION_STOP -> mediaControls.stop()
+            ACTION_PLAY -> {
+                mediaControls.play()
+                val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                manager.notify(12345, getNotification(true))
+
+            }
+            ACTION_PAUSE -> {
+                mediaControls.pause()
+                val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                manager.notify(12345, getNotification())
+            }
+
+            ACTION_STOP -> {
+                mediaControls.stop()
+                stopSelf()
+                return START_NOT_STICKY
+            }
         }
 
         return START_STICKY
 
     }
 
-    private fun showNotification() {
+    private fun getNotification(notDissmisible: Boolean = false): Notification {
 
         val PRIMARY_CHANNEL = "PRIMARY_CHANNEL_ID"
         val PRIMARY_CHANNEL_NAME = "PRIMARY"
-
 
         val notificationManager = NotificationManagerCompat.from(this)
 
@@ -92,37 +107,69 @@ class PlayerService : Service() {
             notificationManager.createNotificationChannel(channel)
         }
 
-
         val notifucation = NotificationCompat.Builder(this, PRIMARY_CHANNEL)
             .setAutoCancel(false)
-            .setContentTitle("")
-            .setSmallIcon(R.drawable.ic_music_note)
+            .setContentTitle("Music title")
+            .setSmallIcon(R.drawable.logo_transp)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .addAction(
-                R.drawable.ic_music_note, "Play",
+            .setOngoing(notDissmisible)
+            .setDeleteIntent(
                 PendingIntent.getService(
                     this, 1,
                     Intent(MyApplication.application, PlayerService::class.java).apply {
-                        setAction(PlayerService.ACTION_PLAY)
-                        setData(Uri.parse("https://c34.radioboss.fm:18234/stream"))
+                        action = ACTION_STOP
+                        data = Uri.parse("https://c34.radioboss.fm:18234/stream")
                     },
                     PendingIntent.FLAG_IMMUTABLE
                 )
             )
             .addAction(
-                R.drawable.ic_music_note, "Pause",
+                R.drawable.ic_play, "Play",
                 PendingIntent.getService(
                     this, 1,
                     Intent(MyApplication.application, PlayerService::class.java).apply {
-                        setAction(PlayerService.ACTION_PAUSE)
+                        action = ACTION_PLAY
+                        data = Uri.parse("https://c34.radioboss.fm:18234/stream")
                     },
                     PendingIntent.FLAG_IMMUTABLE
                 )
             )
-            .build()
+            .addAction(
+                R.drawable.ic_pause,
+                "Pause",
+                PendingIntent.getService(
+                    this, 1,
+                    Intent(MyApplication.application, PlayerService::class.java).apply {
+                        action = ACTION_PAUSE
+                    },
+                    PendingIntent.FLAG_IMMUTABLE
+                )
+            )
 
-        startForeground(12345, notifucation)
+        return notifucation.build()
+//        startForeground(12345, notifucation.build())
 
+    }
+
+    private fun getPlayerStatus(): String {
+        val mediaController = mediaSession.controller
+        val playbackState = mediaController.playbackState
+        if (playbackState != null) {
+            return when (playbackState.state) {
+                PlaybackStateCompat.STATE_PLAYING -> {
+                    "Playing"
+                }
+
+                PlaybackStateCompat.STATE_PAUSED -> {
+                    "Paused"
+                }
+
+                else -> {
+                    "Paused"
+                }
+            }
+        }
+        return "Paused"
     }
 
     override fun onBind(intent: Intent): IBinder? {
