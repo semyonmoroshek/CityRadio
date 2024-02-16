@@ -3,6 +3,8 @@ package com.smproject.cityradio
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
@@ -11,6 +13,7 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
 
 
 class PlayerService : Service() {
@@ -107,10 +110,17 @@ class PlayerService : Service() {
             notificationManager.createNotificationChannel(channel)
         }
 
+        var largeIcon = vectorToBitmap(applicationContext, R.drawable.ic_play)
+
+        if (!notDissmisible) {
+            largeIcon = vectorToBitmap(applicationContext, R.drawable.ic_pause)
+        }
+
         val notifucation = NotificationCompat.Builder(this, PRIMARY_CHANNEL)
             .setAutoCancel(false)
             .setContentTitle("Music title")
             .setSmallIcon(R.drawable.logo_transp)
+            .setLargeIcon(largeIcon)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setOngoing(notDissmisible)
             .setDeleteIntent(
@@ -148,29 +158,28 @@ class PlayerService : Service() {
 
 
         return notifucation.build()
-//        startForeground(12345, notifucation.build())
 
     }
 
-    private fun getPlayerStatus(): String {
-        val mediaController = mediaSession.controller
-        val playbackState = mediaController.playbackState
-        if (playbackState != null) {
-            return when (playbackState.state) {
-                PlaybackStateCompat.STATE_PLAYING -> {
-                    "Playing"
-                }
+    private fun vectorToBitmap(context: Context, drawableId: Int): Bitmap? {
+        // Load the vector drawable
+        val vectorDrawable = VectorDrawableCompat.create(context.resources, drawableId, null) ?: return null
 
-                PlaybackStateCompat.STATE_PAUSED -> {
-                    "Paused"
-                }
+        // Get the intrinsic width and height of the vector drawable
+        val width = vectorDrawable.intrinsicWidth
+        val height = vectorDrawable.intrinsicHeight
 
-                else -> {
-                    "Paused"
-                }
-            }
-        }
-        return "Paused"
+        // Create a bitmap with the same dimensions as the vector drawable
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+
+        // Create a canvas with the bitmap
+        val canvas = Canvas(bitmap)
+
+        // Draw the vector drawable onto the canvas
+        vectorDrawable.setBounds(0, 0, canvas.width, canvas.height)
+        vectorDrawable.draw(canvas)
+
+        return bitmap
     }
 
     override fun onBind(intent: Intent): IBinder? {
