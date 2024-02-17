@@ -1,6 +1,10 @@
 package com.smproject.cityradio
 
-import android.app.*
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -10,13 +14,18 @@ import android.os.Build
 import android.os.IBinder
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
-import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.Observer
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
-
+@AndroidEntryPoint
 class PlayerService : Service() {
+
+    @Inject
+    lateinit var repository: Repository
 
     val mediaSession: MediaSessionCompat by lazy {
         MediaSessionCompat(this, "Player")
@@ -25,6 +34,8 @@ class PlayerService : Service() {
     val mediaControls: MediaControllerCompat.TransportControls by lazy {
         mediaSession.controller.transportControls
     }
+
+    private var songTitleObserver: Observer<String>? = null
 
     companion object {
         const val ACTION_PLAY = "com.smproject.cityradio.ACTION_PLAY"
@@ -40,7 +51,7 @@ class PlayerService : Service() {
         mediaSession.apply {
             isActive = true
             setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
-//            setMetadata()
+
             setCallback(object : MediaSessionCompat.Callback() {
                 override fun onPlay() {
                     super.onPlay()
@@ -58,7 +69,6 @@ class PlayerService : Service() {
                 }
             })
         }
-
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -95,6 +105,8 @@ class PlayerService : Service() {
 
     private fun getNotification(notDissmisible: Boolean = false): Notification {
 
+        var songTitle = repository.songTitle.value
+
         val PRIMARY_CHANNEL = "PRIMARY_CHANNEL_ID"
         val PRIMARY_CHANNEL_NAME = "PRIMARY"
 
@@ -114,13 +126,13 @@ class PlayerService : Service() {
 
         if (!notDissmisible) {
             largeIcon = vectorToBitmap(applicationContext, R.drawable.ic_pause)
+            songTitle = "Paused"
         }
 
         val notifucation = NotificationCompat.Builder(this, PRIMARY_CHANNEL)
             .setAutoCancel(false)
-            .setContentTitle("Music title")
+            .setContentTitle(songTitle)
             .setSmallIcon(R.drawable.logo_transp)
-            .setLargeIcon(largeIcon)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setOngoing(notDissmisible)
             .setDeleteIntent(
@@ -162,20 +174,15 @@ class PlayerService : Service() {
     }
 
     private fun vectorToBitmap(context: Context, drawableId: Int): Bitmap? {
-        // Load the vector drawable
         val vectorDrawable = VectorDrawableCompat.create(context.resources, drawableId, null) ?: return null
 
-        // Get the intrinsic width and height of the vector drawable
         val width = vectorDrawable.intrinsicWidth
         val height = vectorDrawable.intrinsicHeight
 
-        // Create a bitmap with the same dimensions as the vector drawable
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
 
-        // Create a canvas with the bitmap
         val canvas = Canvas(bitmap)
 
-        // Draw the vector drawable onto the canvas
         vectorDrawable.setBounds(0, 0, canvas.width, canvas.height)
         vectorDrawable.draw(canvas)
 
@@ -184,5 +191,10 @@ class PlayerService : Service() {
 
     override fun onBind(intent: Intent): IBinder? {
         return null
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        songTitleObserver?.let { repository.songTitle.removeObserver(it) }
     }
 }
