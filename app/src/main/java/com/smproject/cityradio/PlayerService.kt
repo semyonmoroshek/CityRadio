@@ -180,6 +180,14 @@ class PlayerService : Service() {
             .setLargeIcon(originalBitmap)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setOngoing(false)
+            .setContentIntent(
+                PendingIntent.getActivity(
+                    this,
+                    0,
+                    Intent(this, MainActivity::class.java),
+                    PendingIntent.FLAG_IMMUTABLE
+                )
+            )
             .setDeleteIntent(
                 PendingIntent.getService(
                     this, 1,
