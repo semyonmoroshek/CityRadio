@@ -13,13 +13,14 @@ android {
     defaultConfig {
         applicationId "com.smproject.cityradio"
         minSdk 23
-        targetSdk 32
+        targetSdk 34
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField "String", "RADIO_STREAM_URL", "\"https://c34.radioboss.fm:18234/\""
+        archivesBaseName = "YourCityRadio-v$versionName($versionCode)"
     }
 
     buildTypes {

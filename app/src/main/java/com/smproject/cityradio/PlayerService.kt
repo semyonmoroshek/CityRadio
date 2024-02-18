@@ -8,18 +8,23 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.view.View
+import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.graphics.drawable.IconCompat
 import androidx.lifecycle.Observer
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+
 
 @AndroidEntryPoint
 class PlayerService : Service() {
@@ -86,6 +91,7 @@ class PlayerService : Service() {
                 manager.notify(12345, getNotification(true))
 
             }
+
             ACTION_PAUSE -> {
                 mediaControls.pause()
                 val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -103,7 +109,7 @@ class PlayerService : Service() {
 
     }
 
-    private fun getNotification(notDissmisible: Boolean = false): Notification {
+    private fun getNotification(isPlaying: Boolean = false): Notification {
 
         var songTitle = repository.songTitle.value
 
@@ -122,19 +128,58 @@ class PlayerService : Service() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        var largeIcon = vectorToBitmap(applicationContext, R.drawable.ic_play)
-
-        if (!notDissmisible) {
-            largeIcon = vectorToBitmap(applicationContext, R.drawable.ic_pause)
+        if (!isPlaying) {
             songTitle = "Paused"
         }
+
+        val notificationLayout = RemoteViews(packageName, R.layout.status_bar)
+        val notificationLayoutExpanded = RemoteViews(packageName, R.layout.status_bar_expanded)
+
+        if (isPlaying) {
+            notificationLayout.setViewVisibility(R.id.btnPlay, View.GONE)
+            notificationLayout.setViewVisibility(R.id.btnPause, View.VISIBLE)
+
+            notificationLayoutExpanded.setViewVisibility(R.id.btnPlay, View.GONE)
+            notificationLayoutExpanded.setViewVisibility(R.id.btnPause, View.VISIBLE)
+
+
+        } else {
+            notificationLayout.setViewVisibility(R.id.btnPlay, View.VISIBLE)
+            notificationLayout.setViewVisibility(R.id.btnPause, View.GONE)
+
+            notificationLayoutExpanded.setViewVisibility(R.id.btnPlay, View.VISIBLE)
+            notificationLayoutExpanded.setViewVisibility(R.id.btnPause, View.GONE)
+        }
+
+        notificationLayout.setTextViewText(R.id.notification_title, songTitle)
+        notificationLayoutExpanded.setTextViewText(R.id.notification_title, songTitle)
+
+        setNotificationLayout(notificationLayout)
+        setNotificationLayoutExpanded(notificationLayoutExpanded)
+
+        val originalBitmap = BitmapFactory.decodeResource(resources, R.drawable.logo_transp)
+        val resizedBitmap = Bitmap.createScaledBitmap(originalBitmap, 100, 100, true)
+
+        val mediaSessionToken = mediaSession.sessionToken
+
+        val actionIcon = if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play
+        val actionText = if (isPlaying) "Pause" else "Play"
+
+        val actionIntent = PendingIntent.getService(
+            this, 0,
+            Intent(MyApplication.application, PlayerService::class.java).apply {
+                action = if (isPlaying) ACTION_PAUSE else ACTION_PLAY
+            },
+            PendingIntent.FLAG_IMMUTABLE
+        )
 
         val notifucation = NotificationCompat.Builder(this, PRIMARY_CHANNEL)
             .setAutoCancel(false)
             .setContentTitle(songTitle)
-            .setSmallIcon(R.drawable.logo_transp)
+            .setSmallIcon(R.drawable.ic_music_note)
+            .setLargeIcon(originalBitmap)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setOngoing(notDissmisible)
+            .setOngoing(false)
             .setDeleteIntent(
                 PendingIntent.getService(
                     this, 1,
@@ -145,36 +190,126 @@ class PlayerService : Service() {
                     PendingIntent.FLAG_IMMUTABLE
                 )
             )
-            .addAction(
-                R.drawable.ic_play, "Play",
-                PendingIntent.getService(
-                    this, 1,
-                    Intent(MyApplication.application, PlayerService::class.java).apply {
-                        action = ACTION_PLAY
-                        data = Uri.parse("https://c34.radioboss.fm:18234/stream")
-                    },
-                    PendingIntent.FLAG_IMMUTABLE
-                )
+            .addAction(actionIcon, actionText, actionIntent)
+//            .addAction(
+//                R.drawable.ic_play, "Play",
+//                PendingIntent.getService(
+//                    this, 1,
+//                    Intent(MyApplication.application, PlayerService::class.java).apply {
+//                        action = ACTION_PLAY
+//                        data = Uri.parse("https://c34.radioboss.fm:18234/stream")
+//                    },
+//                    PendingIntent.FLAG_IMMUTABLE
+//                )
+//            )
+//            .addAction(
+//                R.drawable.ic_pause,
+//                "Pause",
+//                PendingIntent.getService(
+//                    this, 1,
+//                    Intent(MyApplication.application, PlayerService::class.java).apply {
+//                        action = ACTION_PAUSE
+//                    },
+//                    PendingIntent.FLAG_IMMUTABLE
+//                )
+//            )
+
+            .setStyle(
+                androidx.media.app.NotificationCompat.MediaStyle()
+                    .setMediaSession(mediaSessionToken)
+                    .setShowActionsInCompactView(0)
+                    .setShowCancelButton(true)
             )
-            .addAction(
-                R.drawable.ic_pause,
-                "Pause",
-                PendingIntent.getService(
-                    this, 1,
-                    Intent(MyApplication.application, PlayerService::class.java).apply {
-                        action = ACTION_PAUSE
-                    },
-                    PendingIntent.FLAG_IMMUTABLE
-                )
-            )
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+
+//            .setCustomContentView(notificationLayout)
+//            .setCustomBigContentView(notificationLayoutExpanded)
 
 
         return notifucation.build()
 
     }
 
+    private fun setNotificationLayoutExpanded(notificationLayout: RemoteViews) {
+        notificationLayout.setOnClickPendingIntent(
+            R.id.btnPlay, PendingIntent.getService(
+                this, 1,
+                Intent(MyApplication.application, PlayerService::class.java).apply {
+                    action = ACTION_PLAY
+                    data = Uri.parse("https://c34.radioboss.fm:18234/stream")
+                },
+                PendingIntent.FLAG_IMMUTABLE
+            )
+        )
+
+        notificationLayout.setOnClickPendingIntent(
+            R.id.btnPause, PendingIntent.getService(
+                this, 1,
+                Intent(MyApplication.application, PlayerService::class.java).apply {
+                    action = ACTION_PAUSE
+                },
+                PendingIntent.FLAG_IMMUTABLE
+            )
+        )
+
+        notificationLayout.setOnClickPendingIntent(
+            R.id.btnClose, PendingIntent.getService(
+                this, 1,
+                Intent(MyApplication.application, PlayerService::class.java).apply {
+                    action = ACTION_STOP
+                    data = Uri.parse("https://c34.radioboss.fm:18234/stream")
+                },
+                PendingIntent.FLAG_IMMUTABLE
+            )
+        )
+    }
+
+    private fun setNotificationLayout(notificationLayout: RemoteViews) {
+        notificationLayout.setOnClickPendingIntent(
+            R.id.btnPlay, PendingIntent.getService(
+                this, 1,
+                Intent(MyApplication.application, PlayerService::class.java).apply {
+                    action = ACTION_PLAY
+                    data = Uri.parse("https://c34.radioboss.fm:18234/stream")
+                },
+                PendingIntent.FLAG_IMMUTABLE
+            )
+        )
+
+        notificationLayout.setOnClickPendingIntent(
+            R.id.btnPause, PendingIntent.getService(
+                this, 1,
+                Intent(MyApplication.application, PlayerService::class.java).apply {
+                    action = ACTION_PAUSE
+                },
+                PendingIntent.FLAG_IMMUTABLE
+            )
+        )
+
+        notificationLayout.setOnClickPendingIntent(
+            R.id.btnClose, PendingIntent.getService(
+                this, 1,
+                Intent(MyApplication.application, PlayerService::class.java).apply {
+                    action = ACTION_STOP
+                    data = Uri.parse("https://c34.radioboss.fm:18234/stream")
+                },
+                PendingIntent.FLAG_IMMUTABLE
+            )
+        )
+    }
+
+    private fun createCustomIcon(bitmap: Bitmap): IconCompat {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            IconCompat.createWithAdaptiveBitmap(bitmap)
+        } else {
+            val resizedBitmap = Bitmap.createScaledBitmap(bitmap, 50, 50, false)
+            IconCompat.createWithBitmap(resizedBitmap)
+        }
+    }
+
     private fun vectorToBitmap(context: Context, drawableId: Int): Bitmap? {
-        val vectorDrawable = VectorDrawableCompat.create(context.resources, drawableId, null) ?: return null
+        val vectorDrawable =
+            VectorDrawableCompat.create(context.resources, drawableId, null) ?: return null
 
         val width = vectorDrawable.intrinsicWidth
         val height = vectorDrawable.intrinsicHeight
