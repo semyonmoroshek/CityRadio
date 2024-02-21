@@ -15,7 +15,7 @@ import android.os.Build
 import android.os.IBinder
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
-import android.view.View
+import android.util.Log
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -111,7 +111,8 @@ class PlayerService : Service() {
 
     private fun getNotification(isPlaying: Boolean = false): Notification {
 
-        var songTitle = repository.songTitle.value
+//        var songTitle = repository.songTitle.value
+        var songTitle = "Your City Radio"
 
         val PRIMARY_CHANNEL = "PRIMARY_CHANNEL_ID"
         val PRIMARY_CHANNEL_NAME = "PRIMARY"
@@ -119,46 +120,22 @@ class PlayerService : Service() {
         val notificationManager = NotificationManagerCompat.from(this)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
+             val channel = NotificationChannel(
                 PRIMARY_CHANNEL,
                 PRIMARY_CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_LOW
             )
-            channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+            channel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+
             notificationManager.createNotificationChannel(channel)
+            Log.d("TTTT", "getLockscreenVisibility : ${channel.lockscreenVisibility}")
         }
 
         if (!isPlaying) {
-            songTitle = "Paused"
+//            songTitle = "Paused"
         }
-
-        val notificationLayout = RemoteViews(packageName, R.layout.status_bar)
-        val notificationLayoutExpanded = RemoteViews(packageName, R.layout.status_bar_expanded)
-
-        if (isPlaying) {
-            notificationLayout.setViewVisibility(R.id.btnPlay, View.GONE)
-            notificationLayout.setViewVisibility(R.id.btnPause, View.VISIBLE)
-
-            notificationLayoutExpanded.setViewVisibility(R.id.btnPlay, View.GONE)
-            notificationLayoutExpanded.setViewVisibility(R.id.btnPause, View.VISIBLE)
-
-
-        } else {
-            notificationLayout.setViewVisibility(R.id.btnPlay, View.VISIBLE)
-            notificationLayout.setViewVisibility(R.id.btnPause, View.GONE)
-
-            notificationLayoutExpanded.setViewVisibility(R.id.btnPlay, View.VISIBLE)
-            notificationLayoutExpanded.setViewVisibility(R.id.btnPause, View.GONE)
-        }
-
-        notificationLayout.setTextViewText(R.id.notification_title, songTitle)
-        notificationLayoutExpanded.setTextViewText(R.id.notification_title, songTitle)
-
-        setNotificationLayout(notificationLayout)
-        setNotificationLayoutExpanded(notificationLayoutExpanded)
 
         val originalBitmap = BitmapFactory.decodeResource(resources, R.drawable.logo_transp)
-        val resizedBitmap = Bitmap.createScaledBitmap(originalBitmap, 100, 100, true)
 
         val mediaSessionToken = mediaSession.sessionToken
 
@@ -173,12 +150,17 @@ class PlayerService : Service() {
             PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notifucation = NotificationCompat.Builder(this, PRIMARY_CHANNEL)
+        val mediaSession = MediaSessionCompat(this, getString(R.string.app_name))
+        mediaSession.isActive = true
+        mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
+
+        val notification = NotificationCompat.Builder(this, PRIMARY_CHANNEL)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setAutoCancel(false)
             .setContentTitle(songTitle)
             .setSmallIcon(R.drawable.ic_music_note)
             .setLargeIcon(originalBitmap)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
             .setOngoing(false)
             .setContentIntent(
                 PendingIntent.getActivity(
@@ -199,42 +181,19 @@ class PlayerService : Service() {
                 )
             )
             .addAction(actionIcon, actionText, actionIntent)
-//            .addAction(
-//                R.drawable.ic_play, "Play",
-//                PendingIntent.getService(
-//                    this, 1,
-//                    Intent(MyApplication.application, PlayerService::class.java).apply {
-//                        action = ACTION_PLAY
-//                        data = Uri.parse("https://c34.radioboss.fm:18234/stream")
-//                    },
-//                    PendingIntent.FLAG_IMMUTABLE
-//                )
-//            )
-//            .addAction(
-//                R.drawable.ic_pause,
-//                "Pause",
-//                PendingIntent.getService(
-//                    this, 1,
-//                    Intent(MyApplication.application, PlayerService::class.java).apply {
-//                        action = ACTION_PAUSE
-//                    },
-//                    PendingIntent.FLAG_IMMUTABLE
-//                )
-//            )
-
             .setStyle(
                 androidx.media.app.NotificationCompat.MediaStyle()
                     .setMediaSession(mediaSessionToken)
                     .setShowActionsInCompactView(0)
                     .setShowCancelButton(true)
             )
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+
 
 //            .setCustomContentView(notificationLayout)
 //            .setCustomBigContentView(notificationLayoutExpanded)
 
 
-        return notifucation.build()
+        return notification.build()
 
     }
 

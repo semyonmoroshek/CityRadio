@@ -100,15 +100,24 @@ class MainViewModel @Inject constructor(
     }
 
     fun startUpdateSongTitle() {
-        repository.updateTasksJob?.cancel()
-        repository.updateTasksJob =
-            viewModelScope.launch(Dispatchers.IO + coroutineExceptionHandler) {
-                while (isActive) {
-                    val resp = repository.getSong()
-                    _songTitle.postValue(resp?.autoDjTitle)
-                    delay(5000)
-                }
+        viewModelScope.launch(Dispatchers.IO + coroutineExceptionHandler) {
+            while (isActive) {
+                val resp = repository.getSong()
+                _songTitle.postValue(resp?.autoDjTitle)
+                delay(5000)
             }
+        }
     }
+
+//        repository.updateTasksJob?.cancel()
+//        repository.updateTasksJob =
+//            viewModelScope.launch(Dispatchers.IO + coroutineExceptionHandler) {
+//                while (isActive) {
+//                    val resp = repository.getSong()
+//                    _songTitle.postValue(resp?.autoDjTitle)
+//                    delay(5000)
+//                }
+//            }
+ //   }
 
 }

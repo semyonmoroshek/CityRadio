@@ -28,31 +28,27 @@
 
     <TextView
         android:id="@+id/title"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Song name and author title demo"
-        android:textColor="#C62828"
+        android:textColor="@color/red"
         android:textSize="30sp"
         android:textStyle="bold"
-        android:layout_marginHorizontal="8dp"
+        android:layout_marginHorizontal="18dp"
         android:gravity="center_horizontal"
         app:layout_constraintBottom_toTopOf="@+id/guideline"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
 
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="20dp"
         android:layout_marginBottom="10dp"
+        android:layout_marginHorizontal="40dp"
         android:src="@drawable/creative_text"
         app:layout_constraintBottom_toTopOf="@+id/imageView2"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/title" />
 
     <ImageView
@@ -62,6 +58,7 @@
         android:layout_marginBottom="4dp"
         android:layout_marginTop="6dp"
         android:src="@drawable/wave"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/txt_homeLink"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
@@ -73,7 +70,7 @@
         android:layout_height="wrap_content"
         android:clickable="true"
         android:focusable="true"
-        android:text="www.yourcityradio.com"
+        android:text="@string/www_yourcityradio_com"
         android:textColor="@color/black"
         android:textSize="22sp"
         android:layout_marginBottom="15dp"
