@@ -7,9 +7,11 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.smproject.cityradio.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -28,9 +30,11 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(binding.root)
 
-        supportActionBar?.setBackgroundDrawable(ColorDrawable(resources.getColor(R.color.red)))
-
-        supportActionBar?.title = "Your City Radio";
+        supportActionBar?.setBackgroundDrawable(ColorDrawable(resources.getColor(R.color.logo_gray_dark)))
+        supportActionBar?.title = "YOUR CITY RADIO"
+//        val customTitle = layoutInflater.inflate(R.layout.action_bar_title, null)
+//        supportActionBar?.customView = customTitle
+//        supportActionBar?.setDisplayShowCustomEnabled(true)
 
         binding.imgPlayPauseBtn.setOnClickListener {
             viewModel.clickBtnPlayer()

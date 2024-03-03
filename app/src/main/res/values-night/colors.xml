@@ -2,4 +2,7 @@
 <resources>
     <color name="icon_color">#FFF</color>
     <color name="data">#FFFFFF</color>
+    <color name="logo_background">#DFD4A9</color>
+    <color name="logo_gray_dark">#5F7872</color>
+    <color name="logo_red">#C62554</color>
 </resources>
