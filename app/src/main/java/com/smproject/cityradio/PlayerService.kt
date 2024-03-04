@@ -135,7 +135,7 @@ class PlayerService : Service() {
 //            songTitle = "Paused"
         }
 
-        val originalBitmap = BitmapFactory.decodeResource(resources, R.drawable.yourcity_radio_logo_626)
+        val originalBitmap = BitmapFactory.decodeResource(resources, R.drawable.status_background06)
 
         val mediaSessionToken = mediaSession.sessionToken
 
@@ -186,6 +186,8 @@ class PlayerService : Service() {
                     .setMediaSession(mediaSessionToken)
                     .setShowActionsInCompactView(0)
                     .setShowCancelButton(true)
+
+
             )
 
 

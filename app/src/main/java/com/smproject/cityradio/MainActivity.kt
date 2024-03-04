@@ -32,6 +32,7 @@ class MainActivity : AppCompatActivity() {
 
         supportActionBar?.setBackgroundDrawable(ColorDrawable(resources.getColor(R.color.logo_gray_dark)))
         supportActionBar?.title = "YOUR CITY RADIO"
+
 //        val customTitle = layoutInflater.inflate(R.layout.action_bar_title, null)
 //        supportActionBar?.customView = customTitle
 //        supportActionBar?.setDisplayShowCustomEnabled(true)

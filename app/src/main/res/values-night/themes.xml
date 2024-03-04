@@ -16,8 +16,10 @@
         <item name="android:actionMenuTextColor">@color/logo_gray_dark</item>
         <item name="android:textColor">@color/logo_gray_dark</item>
         <item name="android:titleTextColor">@color/red</item>
+        <item name="android:textStyle">bold</item>
 
-<!--        <item name="android:actionBarStyle">@style/CustomActionBarStyle</item>-->
+
+        <!--        <item name="android:actionBarStyle">@style/CustomActionBarStyle</item>-->
 
 
     </style>
